@@ -1,0 +1,9 @@
+default['nginx']['conf_template'] = 'nginx.proxy.config.erb'
+default['nginx']['conf_cookbook'] = 'frontend'
+default['nginx']['install_method'] = 'package'
+default['nginx']['default']['modules'] = ['commons']
+#default['nginx']['backend']['servers'] = ['192.168.56.3']
+default['nginx']['backend']['listen'] = 3306
+default['nginx']['backend']['timeout'] = 1
+default['nginx']['listen']['servers'] = [node['hostname'], node['ipaddress']]
+default['nginx']['listen']['port'] = 3306

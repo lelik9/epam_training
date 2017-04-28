@@ -1,0 +1,48 @@
+user <%= node['nginx']['user'] %><% if node['nginx']['user'] != node['nginx']['group'] %> <%= node['nginx']['group'] %><% end %>;
+worker_processes <%= node['nginx']['worker_processes'] %>;
+<% if node['nginx']['daemon_disable'] -%>
+daemon off;
+<% end -%>
+<% if node['nginx']['worker_rlimit_nofile'] -%>
+worker_rlimit_nofile <%= node['nginx']['worker_rlimit_nofile'] %>;
+<% end -%>
+<% if node['nginx']['worker_shutdown_timeout'] -%>
+worker_shutdown_timeout <%= node['nginx']['worker_shutdown_timeout'] %>;
+<% end -%>
+<% node['nginx']['load_modules'].each do |module_to_load| %>
+load_module <%= module_to_load %>;
+<% end -%>
+
+error_log  <%= node['nginx']['log_dir'] %>/error.log<% if node['nginx']['error_log_options'] %> <%= node['nginx']['error_log_options'] %><% end %>;
+pid        <%= @pid_file %>;
+events {
+  worker_connections  <%= node['nginx']['worker_connections'] %>;
+<% if node['nginx']['multi_accept'] -%>
+  multi_accept on;
+<% end -%>
+<% if node['nginx']['event'] -%>
+  use <%= node['nginx']['event'] %>;
+<% end -%>
+<% if node['nginx']['accept_mutex_delay'] -%>
+  accept_mutex_delay <%= node['nginx']['accept_mutex_delay'] %>ms;
+<% end -%>
+}
+
+stream {
+      upstream stream_backend {
+        zone tcp_servers 64k;
+	<% node['nginx']['backend']['servers'].each do |backend| %>
+		server  <%= backend %>;
+	<% end -%>
+
+	
+    }
+
+    server {
+        <% node['nginx']['listen']['servers'].each do |server| %>
+                listen  <%= server %>:<%= node['nginx']['listen']['port'] -%>;
+        <% end -%>
+        proxy_pass stream_backend;
+        proxy_connect_timeout <%= node['nginx']['backend']['timeout']-%>s;
+    }
+}
